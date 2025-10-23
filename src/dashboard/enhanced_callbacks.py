@@ -492,9 +492,12 @@ def register_enhanced_callbacks(app):
                             html.H5("📊 Phân tích Sentiment"),
                             dbc.Badge(sentiment_label, color=color, className='fs-6 mb-3'),
                             html.Div([
-                                dbc.Progress(value=sentiment['positive']*100, color='success', label=f"Tích cực: {sentiment['positive']:.2f}", className='mb-1'),
-                                dbc.Progress(value=sentiment['neutral']*100, color='secondary', label=f"Trung tính: {sentiment['neutral']:.2f}", className='mb-1'),
-                                dbc.Progress(value=sentiment['negative']*100, color='danger', label=f"Tiêu cực: {sentiment['negative']:.2f}")
+                                html.P(f"Tích cực: {sentiment['positive']:.2f}", className='mb-1'),
+                                dbc.Progress(value=sentiment['positive']*100, color='success', className='mb-2'),
+                                html.P(f"Trung tính: {sentiment['neutral']:.2f}", className='mb-1'),
+                                dbc.Progress(value=sentiment['neutral']*100, color='secondary', className='mb-2'),
+                                html.P(f"Tiêu cực: {sentiment['negative']:.2f}", className='mb-1'),
+                                dbc.Progress(value=sentiment['negative']*100, color='danger')
                             ], className='mb-3')
                         ], width=6),
                         dbc.Col([
