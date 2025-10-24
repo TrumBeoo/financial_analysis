@@ -10,7 +10,7 @@ def create_navbar():
     return dbc.NavbarSimple(
         children=[
             dbc.NavItem(dbc.NavLink("Dashboard", href="/", active="exact")),
-            dbc.NavItem(dbc.NavLink("Phân tích URL", href="/url-analysis", active="exact")),
+            dbc.NavItem(dbc.NavLink("Phân tích", href="/url-analysis", active="exact")),
         ],
         brand="Phân tích tác động tin tức đến cổ phiếu theo ngành",
         brand_href="/",
