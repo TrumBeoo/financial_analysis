@@ -35,7 +35,14 @@ def main():
         logger.warning("⚠️ Không crawl được tin tức nào!")
         return
     
-    logger.info(f"✓ Crawl được {len(df_news)} bài viết")
+    logger.info(f"✓ Crawled {len(df_news)} articles")
+    
+    # Kiểm tra content
+    if 'content' in df_news.columns:
+        avg_length = df_news['content'].str.len().mean()
+        logger.info(f"📊 Average content length: {avg_length:.0f} chars")
+    else:
+        logger.warning("⚠️ No content field in crawled data!")
     
     # Lưu dữ liệu gốc
     db_manager.save_news_data(df_news)
@@ -45,7 +52,14 @@ def main():
     
     for idx, row in df_news.iterrows():
         try:
-            full_text = f"{row['title']} {row.get('summary', '')}"
+            # SỬA: Sử dụng full content thay vì chỉ title + summary
+            if 'content' in row and row['content']:
+                full_text = f"{row['title']} {row['content']}"
+            else:
+                full_text = f"{row['title']} {row.get('summary', '')}"
+            
+            logger.info(f"Processing article {idx+1}/{len(df_news)}: {row['title'][:50]}...")
+            logger.info(f"  Text length: {len(full_text)} chars")
             
             # Preprocess
             processed = preprocessor.preprocess_pipeline(full_text)
@@ -53,10 +67,13 @@ def main():
             # Analyze sentiment
             sentiment = sentiment_analyzer.analyze(full_text)
             
+            logger.info(f"  Sentiment: {sentiment['label']} | Sectors: {processed['sectors']}")
+            
             processed_data.append({
                 'source': row['source'],
                 'title': row['title'],
                 'summary': row.get('summary', ''),
+                'content': row.get('content', ''),  # THÊM: Lưu full content
                 'link': row['link'],
                 'crawl_time': row['crawl_time'],
                 'cleaned_text': processed['cleaned_text'],
@@ -70,14 +87,23 @@ def main():
             })
             
         except Exception as e:
-            logger.error(f"Lỗi xử lý bài {idx}: {e}")
+            logger.error(f"❌ Lỗi xử lý bài {idx}: {e}")
             continue
     
     # Lưu dữ liệu đã xử lý
     if processed_data:
         df_processed = pd.DataFrame(processed_data)
         db_manager.save_processed_data(df_processed)
-        logger.info(f"✓ Đã xử lý và lưu {len(df_processed)} bài viết")
+        logger.info(f"✅ Đã xử lý và lưu {len(df_processed)} bài viết")
+        
+        # Statistics
+        logger.info(f"\n📊 THỐNG KÊ:")
+        logger.info(f"  - Tích cực: {len(df_processed[df_processed['predicted_label']==2])}")
+        logger.info(f"  - Trung tính: {len(df_processed[df_processed['predicted_label']==1])}")
+        logger.info(f"  - Tiêu cực: {len(df_processed[df_processed['predicted_label']==0])}")
+        
+        if 'content' in df_processed.columns:
+            logger.info(f"  - Avg content: {df_processed['content'].str.len().mean():.0f} chars")
     
     logger.info("✅ Hoàn thành!")
 

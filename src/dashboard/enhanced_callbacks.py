@@ -346,16 +346,17 @@ def register_enhanced_callbacks(app):
         
         return fig
     
+    
     # Enhanced News Table
     @app.callback(
         Output('enhanced-news-table', 'children'),
         [Input('interval-component', 'n_intervals'),
-         Input('sector-filter', 'value'),
-         Input('time-filter', 'value'),
-         Input('sentiment-filter', 'value')]
+        Input('sector-filter', 'value'),
+        Input('time-filter', 'value'),
+        Input('sentiment-filter', 'value')]
     )
     def update_enhanced_table(n, sector, days, sentiment_type):
-        """Bảng tin tức nâng cao với tương tác"""
+        """Bảng tin tức nâng cao với tương tác - CẢI THIỆN"""
         df = get_filtered_data(sector, days, sentiment_type, limit=20)
         
         if df.empty:
@@ -374,7 +375,18 @@ def register_enhanced_callbacks(app):
             # Format title with highlighting
             title = row.get('title', 'N/A')
             truncated_title = title[:80] + '...' if len(title) > 80 else title
-            highlighted_title = highlight_sentiment_words(truncated_title)
+            
+            # SỬA: Hiển thị content thay vì summary nếu có
+            content_text = ''
+            if 'content' in row and pd.notna(row['content']) and row['content']:
+                content_text = str(row['content'])[:200] + '...'
+                content_length = len(str(row['content']))
+            elif 'summary' in row and pd.notna(row['summary']):
+                content_text = str(row['summary'])[:200] + '...'
+                content_length = len(str(row['summary']))
+            else:
+                content_text = "Không có nội dung"
+                content_length = 0
             
             # Format time
             crawl_time = row.get('crawl_time', datetime.now())
@@ -387,16 +399,24 @@ def register_enhanced_callbacks(app):
                 html.Tr([
                     html.Td([
                         html.Div([
-                            html.Strong(highlighted_title),
+                            html.Strong(truncated_title),
                             html.Br(),
-                            html.Small(str(row.get('content', ''))[:100] + '...', className='text-muted')
+                            html.Small(content_text, className='text-muted'),
+                            html.Br(),
+                            html.Small([
+                                html.I(className='fas fa-align-left me-1'),
+                                f"{content_length} ký tự"
+                            ], className='text-info') if content_length > 0 else None
                         ])
                     ]),
                     html.Td(row.get('source', 'N/A')),
                     html.Td([
                         dbc.Badge(sentiment, color=color, className='me-1'),
                         html.Br(),
-                        html.Small(f"Score: {row.get('sentiment_positive', 0):.2f}", className='text-muted')
+                        html.Small([
+                            html.I(className='fas fa-smile me-1'),
+                            f"{row.get('sentiment_positive', 0):.2f}"
+                        ], className='text-muted')
                     ]),
                     html.Td(row.get('sectors', 'Other')),
                     html.Td(time_str)
@@ -421,13 +441,13 @@ def register_enhanced_callbacks(app):
     # Enhanced URL Analysis
     @app.callback(
         [Output('url-analysis-result', 'children'),
-         Output('detailed-url-analysis', 'children')],
+        Output('detailed-url-analysis', 'children')],
         Input('analyze-btn', 'n_clicks'),
         State('url-input', 'value'),
         prevent_initial_call=True
     )
     def analyze_url_enhanced(n_clicks, url):
-        """Phân tích URL chi tiết với keyword highlighting"""
+        """Phân tích URL chi tiết với keyword highlighting - CẢI THIỆN"""
         if not url:
             alert = dbc.Alert("Vui lòng nhập URL", color='warning')
             return alert, alert
@@ -440,24 +460,41 @@ def register_enhanced_callbacks(app):
                 error_alert = dbc.Alert(f"Lỗi: {result.get('error', 'Không thể trích xuất nội dung')}", color='danger')
                 return error_alert, error_alert
 
+            # Kiểm tra content
+            if not result.get('content') or len(result['content']) < 100:
+                warning_alert = dbc.Alert(
+                    f"⚠️ Nội dung quá ngắn ({len(result.get('content', ''))} ký tự). Kết quả phân tích có thể không chính xác.",
+                    color='warning'
+                )
+            else:
+                warning_alert = None
+            
+            logger.info(f"[URL PARSE] Extracted {len(result['content'])} chars from {url}")
+
             # Save raw data to news_articles
             raw_data = {
                 'source': result['source'],
                 'title': result['title'],
-                'summary': result['content'][:200],
+                'summary': result.get('summary', result['content'][:200]),
+                'content': result['content'],  # THÊM: Lưu full content
                 'link': url,
                 'crawl_time': datetime.now()
             }
             df_raw = pd.DataFrame([raw_data])
             db_manager.save_news_data(df_raw)
             
-            # Preprocess
+            # Preprocess - SỬA: Sử dụng full content
             full_text = f"{result['title']} {result['content']}"
             processed = preprocessor.preprocess_pipeline(full_text)
+            
+            logger.info(f"[PREPROCESS] Cleaned text: {len(processed['cleaned_text'])} chars")
+            logger.info(f"[PREPROCESS] Detected sectors: {processed['sectors']}")
             
             # Analyze sentiment
             sentiment = sentiment_analyzer.analyze(full_text)
             sentiment_label = SENTIMENT_LABELS[sentiment['label']]
+            
+            logger.info(f"[SENTIMENT] Label: {sentiment_label} | Scores: {sentiment}")
             
             # Extract keywords
             keywords = extract_keywords(processed['cleaned_text'])
@@ -466,7 +503,8 @@ def register_enhanced_callbacks(app):
             processed_data = {
                 'source': result['source'],
                 'title': result['title'],
-                'content': result['content'][:500],
+                'content': result['content'],  # THÊM: Lưu full content
+                'summary': result.get('summary', result['content'][:500]),
                 'link': url,
                 'crawl_time': datetime.now(),
                 'cleaned_text': processed['cleaned_text'],
@@ -483,7 +521,7 @@ def register_enhanced_callbacks(app):
 
             # Save prediction data
             prediction_data = {
-                'article_id': url,  # Or use a hash
+                'article_id': url,
                 'predicted_label': sentiment['label'],
                 'predicted_sentiment': sentiment_label,
                 'confidence_scores': {
@@ -497,7 +535,15 @@ def register_enhanced_callbacks(app):
             db_manager.save_predictions(prediction_data)
             
             # Basic result
-            basic_result = dbc.Alert(f"Phân tích thành công! Sentiment: {sentiment_label}", color='success')
+            basic_result = dbc.Alert([
+                html.H5(f"✓ Phân tích thành công!", className='mb-2'),
+                html.P([
+                    html.Strong("Sentiment: "),
+                    dbc.Badge(sentiment_label, color='success' if sentiment['label']==2 else 'danger' if sentiment['label']==0 else 'secondary'),
+                    html.Br(),
+                    html.Small(f"Phân tích từ {len(result['content'])} ký tự nội dung", className='text-muted')
+                ])
+            ], color='success')
             
             # Detailed result
             sentiment_color_map = {'Tích cực': 'success', 'Trung tính': 'secondary', 'Tiêu cực': 'danger'}
@@ -505,17 +551,25 @@ def register_enhanced_callbacks(app):
             
             detailed_result = dbc.Card([
                 dbc.CardHeader([
-                    html.H4("Phân tích chi tiết bài viết", className="mb-0")
+                    html.H4("📊 Phân tích chi tiết bài viết", className="mb-0")
                 ]),
                 dbc.CardBody([
+                    # Warning nếu content ngắn
+                    warning_alert if warning_alert else None,
+                    
                     dbc.Row([
                         dbc.Col([
-                            html.H5("Thông tin bài viết"),
+                            html.H5([html.I(className='fas fa-newspaper me-2'), "Thông tin bài viết"]),
                             html.P([html.Strong("Tiêu đề: "), result['title']]),
                             html.P([html.Strong("Nguồn: "), result['source']]),
                             html.P([html.Strong("Ngày: "), datetime.now().strftime('%d/%m/%Y %H:%M')]),
+                            html.P([
+                                html.Strong("Độ dài: "), 
+                                f"{len(result['content'])} ký tự",
+                                html.Span(" ✓", className='text-success') if len(result['content']) > 300 else html.Span(" ⚠️", className='text-warning')
+                            ]),
                             html.Hr(),
-                            html.H5("Phân tích Sentiment"),
+                            html.H5([html.I(className='fas fa-chart-line me-2'), "Phân tích Sentiment"]),
                             dbc.Badge(sentiment_label, color=color, className='fs-6 mb-3'),
                             html.Div([
                                 html.P(f"Tích cực: {sentiment['positive']:.2f}", className='mb-1'),
@@ -524,20 +578,32 @@ def register_enhanced_callbacks(app):
                                 dbc.Progress(value=sentiment['neutral']*100, color='secondary', className='mb-2'),
                                 html.P(f"Tiêu cực: {sentiment['negative']:.2f}", className='mb-1'),
                                 dbc.Progress(value=sentiment['negative']*100, color='danger')
-                            ], className='mb-3')
+                            ], className='mb-3'),
+                            html.Hr(),
+                            html.H5([html.I(className='fas fa-industry me-2'), "Ngành nghề"]),
+                            html.Div([
+                                dbc.Badge(sector, color='primary', className='me-1 mb-1') 
+                                for sector in processed['sectors']
+                            ])
                         ], width=6),
                         dbc.Col([
-                            html.H5("Tóm tắt nội dung"),
-                            html.P(result['content'][:400] + '...' if len(result['content']) > 400 else result['content']),
-                            html.Hr(),
-                            html.H5("Từ khóa quan trọng"),
+                            html.H5([html.I(className='fas fa-file-alt me-2'), "Tóm tắt nội dung"]),
                             html.Div([
-                                dbc.Badge(keyword[0], color='info', className='me-1 mb-1') 
-                                for keyword in keywords[:10]
+                                html.P(result['content'][:600] + '...' if len(result['content']) > 600 else result['content'],
+                                    style={'maxHeight': '200px', 'overflowY': 'auto', 'fontSize': '0.9rem'})
+                            ], className='p-2 bg-light rounded'),
+                            html.Hr(),
+                            html.H5([html.I(className='fas fa-key me-2'), "Từ khóa quan trọng"]),
+                            html.Div([
+                                dbc.Badge(f"{keyword[0]} ({keyword[1]})", color='info', className='me-1 mb-1') 
+                                for keyword in keywords[:15]
                             ]),
                             html.Hr(),
-                            html.H5("Liên kết"),
-                            html.A("Xem bài gốc", href=url, target="_blank", className="btn btn-outline-primary")
+                            html.H5([html.I(className='fas fa-link me-2'), "Liên kết"]),
+                            html.A([
+                                html.I(className='fas fa-external-link-alt me-2'),
+                                "Xem bài gốc"
+                            ], href=url, target="_blank", className="btn btn-outline-primary")
                         ], width=6)
                     ])
                 ])
@@ -546,10 +612,10 @@ def register_enhanced_callbacks(app):
             return basic_result, detailed_result
             
         except Exception as e:
-            logger.error(f"Error in URL analysis: {str(e)}")
+            logger.error(f"Error in URL analysis: {str(e)}", exc_info=True)
             error_alert = dbc.Alert(f"Lỗi xử lý: {str(e)}", color='danger')
             return error_alert, error_alert
-
+    
 @cache_result(timeout=PERFORMANCE_CONFIG['cache_timeout'])
 def get_filtered_data(sector='all', days=30, sentiment_type='all', limit=1000):
     """Lấy dữ liệu đã lọc theo các tiêu chí với cache"""
@@ -572,9 +638,29 @@ def get_filtered_data(sector='all', days=30, sentiment_type='all', limit=1000):
         cutoff_date = datetime.now() - timedelta(days=days)
         df = df[pd.to_datetime(df['crawl_time']) >= cutoff_date]
     
-    # Map sectors to standard names
+    # FIX: Xử lý sectors column đúng cách
     if 'sectors' in df.columns:
-        df['sectors'] = df['sectors'].map(lambda x: SECTOR_MAPPINGS.get(x, 'Other') if pd.notna(x) else 'Other')
+        def process_sector(sector_value):
+            """Xử lý giá trị sector - có thể là string hoặc list"""
+            if pd.isna(sector_value):
+                return 'Other'
+            
+            # Nếu là string chứa comma-separated values
+            if isinstance(sector_value, str):
+                sectors_list = [s.strip() for s in sector_value.split(',')]
+                # Lấy ngành đầu tiên (chính)
+                main_sector = sectors_list[0] if sectors_list else 'Other'
+                # Map nếu cần
+                return SECTOR_MAPPINGS.get(main_sector, main_sector)
+            
+            # Nếu là list
+            elif isinstance(sector_value, list):
+                main_sector = sector_value[0] if sector_value else 'Other'
+                return SECTOR_MAPPINGS.get(main_sector, main_sector)
+            
+            return 'Other'
+        
+        df['sectors'] = df['sectors'].apply(process_sector)
     
     # Filter by sector
     if sector != 'all' and 'sectors' in df.columns:

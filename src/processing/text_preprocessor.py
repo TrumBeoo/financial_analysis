@@ -21,17 +21,95 @@ class VietnameseTextPreprocessor:
             'trung_tính': ['ổn định', 'duy trì', 'giữ nguyên', 'không đổi', 'bình thường']
         }
         
-        # Các ngành quan trọng trên thị trường chứng khoán VN
+        # Các ngành quan trọng trên thị trường chứng khoán VN - CẢI THIỆN
         self.sectors = {
-            'ngân_hàng': ['ngân hàng', 'bank', 'tín dụng', 'cho vay', 'huy động'],
-            'bất_động_sản': ['bất động sản', 'nhà đất', 'căn hộ', 'dự án', 'khu đô thị'],
-            'chứng_khoán': ['chứng khoán', 'cổ phiếu', 'trái phiếu', 'đầu tư', 'niêm yết'],
-            'bán_lẻ': ['bán lẻ', 'siêu thị', 'thương mại', 'cửa hàng', 'mua sắm'],
-            'công_nghệ': ['công nghệ', 'phần mềm', 'công nghệ thông tin', 'it', 'digital'],
-            'sản_xuất': ['sản xuất', 'nhà máy', 'công nghiệp', 'chế biến', 'gia công'],
-            'năng_lượng': ['điện', 'năng lượng', 'dầu khí', 'xăng dầu', 'petro'],
-            'vận_tải': ['hàng không', 'vận tải', 'logistics', 'cảng', 'giao nhận'],
-            'nông_nghiệp': ['nông nghiệp', 'thủy sản', 'cao su', 'gạo', 'cà phê']
+            'Banking': [
+                # Tiếng Việt
+                'ngân hàng', 'bank', 'vietcombank', 'vietinbank', 'bidv', 'agribank',
+                'techcombank', 'vpbank', 'acb', 'mb', 'sacombank', 'scb',
+                'tín dụng', 'cho vay', 'huy động', 'tiền gửi', 'lãi suất',
+                'npl', 'nợ xấu', 'dư nợ', 'tăng trưởng tín dụng', 'nim',
+                # Tiếng Anh
+                'credit growth', 'deposit', 'lending', 'loan', 'interest rate'
+            ],
+            'Real Estate': [
+                # Tiếng Việt
+                'bất động sản', 'bds', 'nhà đất', 'căn hộ', 'chung cư',
+                'dự án', 'khu đô thị', 'condotel', 'biệt thự', 'townhouse',
+                'vingroup', 'vinhomes', 'novaland', 'khang điền', 'đất xanh',
+                'hưng thịnh', 'phát đạt', 'cotec', 'hòa bình',
+                'thị trường nhà đất', 'giá nhà', 'giao dịch bđs',
+                # Tiếng Anh  
+                'property', 'housing', 'apartment', 'villa', 'real estate developer'
+            ],
+            'Finance': [
+                # Tiếng Việt
+                'chứng khoán', 'cổ phiếu', 'trái phiếu', 'đầu tư', 'niêm yết',
+                'hose', 'hnx', 'upcom', 'vnindex', 'vn30', 'vn diamond',
+                'ssi', 'hsc', 'vndirect', 'vcbs', 'vps', 'fpts', 'bvsc',
+                'giao dịch', 'thanh khoản', 'vốn hóa', 'p/e', 'eps',
+                'cổ tức', 'phát hành', 'thị trường vốn',
+                # Tiếng Anh
+                'stock', 'bond', 'securities', 'trading', 'market cap', 'dividend'
+            ],
+            'Retail': [
+                # Tiếng Việt
+                'bán lẻ', 'siêu thị', 'thương mại', 'cửa hàng', 'mua sắm',
+                'vinmart', 'winmart', 'co.op mart', 'saigon co.op', 'aeon', 'lotte',
+                'mm mega market', 'big c', 'vincom', 'emart',
+                'thế giới di động', 'điện máy xanh', 'fpt shop', 'cellphones',
+                'bách hóa', 'trung tâm thương mại', 'tiêu dùng',
+                # Tiếng Anh
+                'retail', 'supermarket', 'shopping mall', 'consumer', 'e-commerce'
+            ],
+            'Technology': [
+                # Tiếng Việt
+                'công nghệ', 'phần mềm', 'công nghệ thông tin', 'it', 'digital',
+                'fpt', 'viettel', 'vnpt', 'cmg', 'cmb', 'sam', 'vng', 'momo',
+                'fintech', 'ai', 'blockchain', 'iot', 'cloud', 'saas',
+                'chuyển đổi số', 'số hóa', 'ứng dụng', 'nền tảng',
+                # Tiếng Anh
+                'software', 'platform', 'app', 'digitalization', 'tech startup'
+            ],
+            'Manufacturing': [
+                # Tiếng Việt
+                'sản xuất', 'nhà máy', 'công nghiệp', 'chế biến', 'gia công',
+                'dệt may', 'da giày', 'điện tử', 'linh kiện', 'ô tô', 'xe máy',
+                'hòa phát', 'vinfast', 'thaco', 'vinatex', 'garco', 'pyn',
+                'xuất khẩu', 'fdi', 'khu công nghiệp', 'nhà xưởng',
+                # Tiếng Anh
+                'manufacturing', 'factory', 'production', 'textile', 'automotive'
+            ],
+            'Energy': [
+                # Tiếng Việt
+                'điện', 'năng lượng', 'dầu khí', 'xăng dầu', 'petro',
+                'evn', 'petrovietnam', 'pvn', 'pv gas', 'pv power', 'pv oil',
+                'nhiệt điện', 'thủy điện', 'điện gió', 'điện mặt trời',
+                'năng lượng tái tạo', 'khí đốt', 'lng',
+                # Tiếng Anh
+                'electricity', 'power', 'renewable energy', 'solar', 'wind power', 'oil gas'
+            ],
+            'Transportation': [
+                # Tiếng Việt
+                'hàng không', 'vận tải', 'logistics', 'cảng', 'giao nhận',
+                'vietnam airlines', 'vietjet', 'bamboo airways', 'vietjet air',
+                'gemadept', 'hải phòng', 'sài gòn port', 'tan cang',
+                'vận chuyển', 'kho bãi', 'container', 'hậu cần',
+                # Tiếng Anh
+                'airline', 'shipping', 'port', 'freight', 'cargo', 'warehouse'
+            ],
+            'Agriculture': [
+                # Tiếng Việt
+                'nông nghiệp', 'thủy sản', 'cao su', 'gạo', 'cà phê',
+                'hồ tiêu', 'điều', 'tôm', 'cá tra', 'thuỷ sản',
+                'vinamilk', 'masan', 'hoang anh gia lai', 'thadi', 'phu nhuan jewelry',
+                'chăn nuôi', 'trồng trọt', 'chế biến thực phẩm',
+                # Tiếng Anh
+                'agriculture', 'seafood', 'rubber', 'coffee', 'rice', 'aquaculture'
+            ],
+            'Other': [
+                'tổng hợp', 'đa ngành', 'khác', 'other', 'diversified', 'conglomerate'
+            ]
         }
         
         # Stopwords tiếng Việt
@@ -105,17 +183,36 @@ class VietnameseTextPreprocessor:
         return sentiment_score
     
     def extract_sector(self, text):
-        """Xác định ngành liên quan"""
+        """Xác định ngành liên quan - CẢI THIỆN"""
         text = text.lower()
         detected_sectors = []
         
-        for sector, keywords in self.sectors.items():
-            for keyword in keywords:
-                if keyword in text:
-                    detected_sectors.append(sector)
-                    break
+        # Tính điểm cho mỗi ngành
+        sector_scores = {}
         
-        return detected_sectors if detected_sectors else ['tổng_hợp']
+        for sector, keywords in self.sectors.items():
+            score = 0
+            for keyword in keywords:
+                if keyword.lower() in text:
+                    # Từ dài hơn có trọng số cao hơn
+                    weight = len(keyword.split())
+                    score += weight
+            
+            if score > 0:
+                sector_scores[sector] = score
+        
+        # Sắp xếp theo điểm số và lấy top ngành
+        if sector_scores:
+            sorted_sectors = sorted(sector_scores.items(), key=lambda x: x[1], reverse=True)
+            # Lấy ngành có điểm cao nhất, hoặc top 2 nếu điểm gần bằng nhau
+            detected_sectors.append(sorted_sectors[0][0])
+            
+            if len(sorted_sectors) > 1:
+                # Nếu ngành thứ 2 có điểm >= 70% ngành đầu
+                if sorted_sectors[1][1] >= sorted_sectors[0][1] * 0.7:
+                    detected_sectors.append(sorted_sectors[1][0])
+        
+        return detected_sectors if detected_sectors else ['Other']
     
     def preprocess_pipeline(self, text):
         """Pipeline xử lý hoàn chỉnh"""

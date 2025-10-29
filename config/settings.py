@@ -83,6 +83,7 @@ SENTIMENT_COLORS = {
 
 # Sector Mappings
 SECTOR_MAPPINGS = {
+    # Mapping cũ (backward compatibility)
     'ngân_hàng': 'Banking',
     'bất_động_sản': 'Real Estate',
     'chứng_khoán': 'Finance',
@@ -92,7 +93,19 @@ SECTOR_MAPPINGS = {
     'vận_tải': 'Transportation',
     'nông_nghiệp': 'Agriculture',
     'bán_lẻ': 'Retail',
-    'tổng_hợp': 'Other'
+    'tổng_hợp': 'Other',
+    
+    # Mapping mới (trực tiếp từ preprocessor)
+    'Banking': 'Banking',
+    'Real Estate': 'Real Estate',
+    'Finance': 'Finance',
+    'Technology': 'Technology',
+    'Manufacturing': 'Manufacturing',
+    'Energy': 'Energy',
+    'Transportation': 'Transportation',
+    'Agriculture': 'Agriculture',
+    'Retail': 'Retail',
+    'Other': 'Other'
 }
 
 # Performance Settings

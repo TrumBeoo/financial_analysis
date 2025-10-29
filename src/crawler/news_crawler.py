@@ -1,7 +1,7 @@
 # file: news_crawler.py
 
 import scrapy
-from scrapy.crawler import CrawlerProcess
+from scrapy.crawler import CrawlerProcess, CrawlerRunner
 from newspaper import Article
 import newspaper
 from selenium import webdriver
@@ -66,10 +66,12 @@ class FinancialNewsCrawler:
         self.chrome_options.add_argument('--no-sandbox')
         self.chrome_options.add_argument('--disable-dev-shm-usage')
         
-        # Cấu hình Newspaper
+        # Cấu hình Newspaper - CẢI THIỆN
         self.newspaper_config = newspaper.Config()
         self.newspaper_config.language = 'vi'
         self.newspaper_config.memoize_articles = False
+        self.newspaper_config.fetch_images = False  # Tắt fetch images để nhanh hơn
+        self.newspaper_config.request_timeout = 10
         
         # Định nghĩa các nguồn tin
         self.news_sources = {
@@ -153,17 +155,22 @@ class FinancialNewsCrawler:
             return []
         
         source_config = self.news_sources[source_name]
-        process = CrawlerProcess({
-            'USER_AGENT': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'ROBOTSTXT_OBEY': False,
-            'LOG_LEVEL': 'ERROR'
-        })
         
-        spider = NewsSpider(source_config=source_config)
-        process.crawl(spider)
-        process.start()
-        
-        return spider.articles
+        try:
+            process = CrawlerProcess({
+                'USER_AGENT': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'ROBOTSTXT_OBEY': False,
+                'LOG_LEVEL': 'ERROR'
+            })
+            
+            spider = NewsSpider(source_config=source_config)
+            process.crawl(spider)
+            process.start()
+            
+            return spider.articles
+        except Exception as e:
+            logger.error(f"Scrapy crawl error for {source_name}: {e}")
+            return []
     
     def crawl_with_selenium(self, source_name):
         """Crawl sử dụng Selenium cho trang cần JS"""
@@ -217,7 +224,7 @@ class FinancialNewsCrawler:
         return articles
     
     def crawl_with_newspaper(self, source_name):
-        """Crawl sử dụng Newspaper3k"""
+        """Crawl sử dụng Newspaper3k - CẢI THIỆN"""
         if source_name not in self.news_sources:
             return []
         
@@ -231,17 +238,23 @@ class FinancialNewsCrawler:
                 try:
                     article = Article(article_url, config=self.newspaper_config)
                     article.download()
-                    article.parse()
+                    article.parse()  # QUAN TRỌNG: Parse để lấy full text
                     
-                    if article.title and len(article.text) > 100:
+                    # Kiểm tra có content đầy đủ
+                    if article.title and article.text and len(article.text) > 100:
                         articles.append({
                             'source': source_config['name'],
                             'title': article.title,
-                            'summary': article.text[:200] + '...',
+                            'summary': article.text[:300] + '...' if len(article.text) > 300 else article.text,
+                            'content': article.text,  # THÊM: Lưu full content
                             'link': article_url,
-                            'crawl_time': datetime.now()
+                            'crawl_time': datetime.now(),
+                            'publish_date': article.publish_date if article.publish_date else datetime.now()
                         })
-                except:
+                        
+                        logger.info(f"✓ Extracted full content from: {article.title[:50]}...")
+                except Exception as e:
+                    logger.debug(f"Error extracting article {article_url}: {e}")
                     continue
         except Exception as e:
             logger.error(f"Newspaper error for {source_name}: {e}")
@@ -249,31 +262,53 @@ class FinancialNewsCrawler:
         return articles
     
     def get_article_detail(self, url):
-        """Lấy nội dung chi tiết bằng Newspaper3k"""
+        """Lấy nội dung chi tiết bằng Newspaper3k - CẢI THIỆN"""
         try:
             article = Article(url, config=self.newspaper_config)
             article.download()
             article.parse()
-            return article.text
+            
+            return {
+                'title': article.title,
+                'content': article.text,  # Full content
+                'summary': article.text[:300] + '...' if len(article.text) > 300 else article.text,
+                'publish_date': article.publish_date,
+                'authors': article.authors
+            }
         except Exception as e:
             logger.error(f"Error getting article detail: {e}")
-            return ""
+            return None
     
     def crawl_source(self, source_name):
-        """Crawl một nguồn tin cụ thể"""
+        """Crawl một nguồn tin cụ thể - CẢI THIỆN"""
         if source_name not in self.news_sources:
             return []
         
         source_config = self.news_sources[source_name]
         
-        if source_config.get('use_selenium', False):
-            return self.crawl_with_selenium(source_name)
-        else:
-            # Thử newspaper3k trước, fallback sang scrapy
-            articles = self.crawl_with_newspaper(source_name)
-            if not articles:
+        # Ưu tiên newspaper3k vì lấy được full content
+        articles = self.crawl_with_newspaper(source_name)
+        
+        # Nếu newspaper3k không được, fallback sang các phương pháp khác
+        if not articles:
+            if source_config.get('use_selenium', False):
+                articles = self.crawl_with_selenium(source_name)
+            else:
                 articles = self.crawl_with_scrapy(source_name)
-            return articles
+            
+            # Bổ sung content cho các bài chỉ có link
+            articles_with_content = []
+            for article in articles[:10]:  # Giới hạn 10 bài để không tốn thời gian
+                detail = self.get_article_detail(article['link'])
+                if detail and detail['content']:
+                    article['content'] = detail['content']
+                    article['summary'] = detail['summary']
+                    articles_with_content.append(article)
+                    logger.info(f"✓ Fetched full content for: {article['title'][:50]}...")
+            
+            articles = articles_with_content if articles_with_content else articles
+        
+        return articles
     
     def crawl_all(self, max_workers=3):
         """Crawl tất cả nguồn tin song song"""
@@ -285,15 +320,16 @@ class FinancialNewsCrawler:
             
             for future in futures:
                 try:
-                    articles = future.result(timeout=60)
+                    articles = future.result(timeout=120)  # Tăng timeout vì fetch content lâu hơn
                     all_articles.extend(articles)
-                    logger.info(f"Crawled {len(articles)} articles from {futures[future]}")
+                    logger.info(f"✓ Crawled {len(articles)} articles from {futures[future]}")
                 except Exception as e:
                     logger.error(f"Error crawling {futures[future]}: {e}")
         
         df = pd.DataFrame(all_articles)
         if not df.empty:
             df = df.drop_duplicates(subset=['title'], keep='first')
+            logger.info(f"📊 Total unique articles: {len(df)}")
         
         return df
 
@@ -307,6 +343,10 @@ if __name__ == "__main__":
     # Crawl tất cả nguồn
     df = crawler.crawl_all()
     print(f"Crawled {len(df)} articles total")
+    
+    # Kiểm tra content
+    if not df.empty and 'content' in df.columns:
+        print(f"\nSample content length: {df['content'].str.len().mean():.0f} characters")
     
     # Lưu kết quả
     if not df.empty:

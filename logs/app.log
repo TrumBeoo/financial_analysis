@@ -352,3 +352,34 @@ Parsed a serial number which wasn't positive (i.e., it was negative or zero), wh
 
 2025-10-29 13:35:49,689 [INFO] __main__: Starting Financial News Analysis Application...
 2025-10-29 13:35:49,689 [INFO] src.dashboard.app: Starting dashboard on localhost:8050
+2025-10-29 13:41:12,148 [INFO] __main__: Starting Financial News Analysis Application...
+2025-10-29 13:41:12,148 [INFO] src.dashboard.app: Starting dashboard on localhost:8050
+2025-10-29 13:41:12,165 [INFO] dash.dash: Dash is running on http://localhost:8050/
+
+2025-10-29 13:41:18,757 [INFO] __main__: Starting Financial News Analysis Application...
+2025-10-29 13:41:18,757 [INFO] src.dashboard.app: Starting dashboard on localhost:8050
+2025-10-29 13:47:15,323 [INFO] __main__: Starting Financial News Analysis Application...
+2025-10-29 13:47:15,324 [INFO] src.dashboard.app: Starting dashboard on localhost:8050
+2025-10-29 13:48:01,341 [INFO] __main__: Starting Financial News Analysis Application...
+2025-10-29 13:48:01,341 [INFO] src.dashboard.app: Starting dashboard on localhost:8050
+2025-10-29 13:49:38,538 [INFO] __main__: Starting Financial News Analysis Application...
+2025-10-29 13:49:38,538 [INFO] src.dashboard.app: Starting dashboard on localhost:8050
+2025-10-29 13:49:38,538 [INFO] dash.dash: Dash is running on http://localhost:8050/
+
+2025-10-29 13:49:44,683 [INFO] __main__: Starting Financial News Analysis Application...
+2025-10-29 13:49:44,683 [INFO] src.dashboard.app: Starting dashboard on localhost:8050
+2025-10-29 13:59:02,724 [INFO] __main__: Starting Financial News Analysis Application...
+2025-10-29 13:59:02,724 [INFO] src.dashboard.app: Starting dashboard on localhost:8050
+2025-10-29 14:08:57,151 [INFO] __main__: Starting Financial News Analysis Application...
+2025-10-29 14:08:57,151 [INFO] src.dashboard.app: Starting dashboard on localhost:8050
+2025-10-29 14:08:57,151 [INFO] dash.dash: Dash is running on http://localhost:8050/
+
+2025-10-29 14:09:03,484 [INFO] __main__: Starting Financial News Analysis Application...
+2025-10-29 14:09:03,484 [INFO] src.dashboard.app: Starting dashboard on localhost:8050
+2025-10-29 14:09:14,879 [INFO] src.database.db_manager: Loaded 78 processed with avg content: 484
+2025-10-29 14:09:14,895 [INFO] src.database.db_manager: Loaded 78 processed with avg content: 484
+2025-10-29 14:09:14,895 [INFO] src.database.db_manager: Loaded 78 processed with avg content: 484
+2025-10-29 14:09:14,907 [INFO] src.database.db_manager: Loaded 78 processed with avg content: 484
+2025-10-29 14:09:14,910 [INFO] src.database.db_manager: Loaded 78 processed with avg content: 484
+2025-10-29 14:09:14,910 [INFO] src.database.db_manager: Loaded 78 processed with avg content: 484
+2025-10-29 14:09:16,892 [INFO] src.database.db_manager: Loaded 20 processed with avg content: 500

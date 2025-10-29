@@ -26,27 +26,34 @@ class URLParser:
             return False
     
     def extract_with_newspaper(self, url):
-        """Trích xuất nội dung bằng Newspaper3k"""
+        """Trích xuất nội dung bằng Newspaper3k - CẢI THIỆN"""
         try:
             article = Article(url, language='vi')
             article.download()
             article.parse()
             
+            # Kiểm tra content có đầy đủ không
+            if not article.text or len(article.text) < 100:
+                logger.warning(f"Content too short from newspaper3k: {len(article.text)} chars")
+                return {'success': False, 'error': 'Content too short'}
+            
             return {
                 'success': True,
                 'title': article.title,
-                'content': article.text,
+                'content': article.text,  # Full content
+                'summary': article.text[:500] + '...' if len(article.text) > 500 else article.text,
                 'authors': article.authors,
                 'publish_date': article.publish_date,
                 'top_image': article.top_image,
-                'source': urlparse(url).netloc
+                'source': urlparse(url).netloc,
+                'content_length': len(article.text)  # Debug info
             }
         except Exception as e:
             logger.error(f"Newspaper extraction failed: {e}")
             return {'success': False, 'error': str(e)}
     
     def extract_with_beautifulsoup(self, url):
-        """Trích xuất nội dung bằng BeautifulSoup (fallback)"""
+        """Trích xuất nội dung bằng BeautifulSoup (fallback) - CẢI THIỆN"""
         try:
             response = requests.get(url, headers=self.headers, timeout=10)
             response.raise_for_status()
@@ -61,25 +68,42 @@ class URLParser:
                     title = element.get_text().strip()
                     break
             
-            # Tìm nội dung
+            # Tìm nội dung - CẢI THIỆN
             content = []
-            for tag in ['article', 'div.content', 'div.article-body']:
-                elements = soup.select(tag)
+            
+            # Thử các selector phổ biến cho nội dung bài viết
+            selectors = [
+                'article', 'div.article-body', 'div.content', 'div.entry-content',
+                'div.post-content', 'div.article-content', 'div.detail-content'
+            ]
+            
+            for selector in selectors:
+                elements = soup.select(selector)
                 if elements:
                     for elem in elements:
                         paragraphs = elem.find_all('p')
-                        content.extend([p.get_text().strip() for p in paragraphs])
-                    break
+                        content.extend([p.get_text().strip() for p in paragraphs if len(p.get_text().strip()) > 20])
+                    if content:
+                        break
             
+            # Nếu không tìm thấy, lấy tất cả thẻ p
             if not content:
                 paragraphs = soup.find_all('p')
-                content = [p.get_text().strip() for p in paragraphs]
+                content = [p.get_text().strip() for p in paragraphs if len(p.get_text().strip()) > 20]
+            
+            full_content = '\n'.join(content)
+            
+            if not full_content or len(full_content) < 100:
+                logger.warning(f"Content too short from BeautifulSoup: {len(full_content)} chars")
+                return {'success': False, 'error': 'Content too short'}
             
             return {
                 'success': True,
                 'title': title or 'No title',
-                'content': '\n'.join(content),
-                'source': urlparse(url).netloc
+                'content': full_content,  # Full content
+                'summary': full_content[:500] + '...' if len(full_content) > 500 else full_content,
+                'source': urlparse(url).netloc,
+                'content_length': len(full_content)
             }
         except Exception as e:
             logger.error(f"BeautifulSoup extraction failed: {e}")
@@ -93,8 +117,15 @@ class URLParser:
         # Thử Newspaper3k trước
         result = self.extract_with_newspaper(url)
         
-        # Nếu thất bại, thử BeautifulSoup
+        # Nếu thất bại hoặc content quá ngắn, thử BeautifulSoup
         if not result['success']:
+            logger.info("Trying BeautifulSoup fallback...")
             result = self.extract_with_beautifulsoup(url)
+        
+        # Log kết quả
+        if result['success']:
+            logger.info(f"✓ Extracted {result.get('content_length', 0)} chars from {url}")
+        else:
+            logger.error(f"✗ Failed to extract content from {url}")
         
         return result

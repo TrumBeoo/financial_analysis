@@ -2,6 +2,9 @@ from config.database import MongoDBConfig
 from datetime import datetime
 import pandas as pd
 from dotenv import load_dotenv
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -12,7 +15,7 @@ class DatabaseManager:
         self.db = self.config.get_database()
     
     def save_news_data(self, df_news):
-        """Lưu dữ liệu tin tức vào MongoDB"""
+        """Lưu dữ liệu tin tức vào MongoDB - CẢI THIỆN"""
         try:
             collection = self.config.get_collection('news_articles')
             if collection is None:
@@ -23,16 +26,20 @@ class DatabaseManager:
             records = df_news.to_dict('records')
             for record in records:
                 record['created_at'] = datetime.now()
+                
+                # DEBUG: Log content length
+                if 'content' in record:
+                    logger.info(f"Saving article with {len(record['content'])} chars content")
             
             result = collection.insert_many(records)
-            print(f"Đã lưu {len(result.inserted_ids)} bài viết vào collection news_articles")
+            print(f"✓ Đã lưu {len(result.inserted_ids)} bài viết vào news_articles")
             return True
         except Exception as e:
-            print(f"Lỗi lưu dữ liệu: {e}")
+            print(f"❌ Lỗi lưu dữ liệu: {e}")
             return False
     
     def save_processed_data(self, df_processed):
-        """Lưu dữ liệu đã xử lý"""
+        """Lưu dữ liệu đã xử lý - CẢI THIỆN"""
         try:
             collection = self.config.get_collection('processed_articles')
             if collection is None:
@@ -48,12 +55,18 @@ class DatabaseManager:
             
             for record in records:
                 record['processed_at'] = datetime.now()
+                
+                # DEBUG: Log để kiểm tra content và sectors
+                if 'content' in record:
+                    logger.info(f"[SAVE] Content length: {len(record['content'])} chars")
+                if 'sectors' in record:
+                    logger.info(f"[SAVE] Sectors: {record['sectors']}")
             
             result = collection.insert_many(records)
-            print(f"Đã lưu {len(result.inserted_ids)} bài viết đã xử lý")
+            print(f"✓ Đã lưu {len(result.inserted_ids)} bài viết đã xử lý")
             return True
         except Exception as e:
-            print(f"Lỗi lưu dữ liệu xử lý: {e}")
+            print(f"❌ Lỗi lưu dữ liệu xử lý: {e}")
             return False
     
     def load_news_data(self, limit=None):
@@ -71,10 +84,15 @@ class DatabaseManager:
             if data:
                 df = pd.DataFrame(data)
                 df.drop('_id', axis=1, inplace=True, errors='ignore')
+                
+                # DEBUG: Check content
+                if 'content' in df.columns:
+                    logger.info(f"Loaded {len(df)} articles with avg content length: {df['content'].str.len().mean():.0f}")
+                
                 return df
             return pd.DataFrame()
         except Exception as e:
-            print(f"Lỗi tải dữ liệu: {e}")
+            print(f"❌ Lỗi tải dữ liệu: {e}")
             return pd.DataFrame()
     
     def load_processed_data(self, limit=None):
@@ -92,10 +110,15 @@ class DatabaseManager:
             if data:
                 df = pd.DataFrame(data)
                 df.drop('_id', axis=1, inplace=True, errors='ignore')
+                
+                # DEBUG: Check content
+                if 'content' in df.columns:
+                    logger.info(f"Loaded {len(df)} processed with avg content: {df['content'].str.len().mean():.0f}")
+                
                 return df
             return pd.DataFrame()
         except Exception as e:
-            print(f"Lỗi tải dữ liệu đã xử lý: {e}")
+            print(f"❌ Lỗi tải dữ liệu đã xử lý: {e}")
             return pd.DataFrame()
     
     def save_predictions(self, predictions_data):
@@ -111,5 +134,5 @@ class DatabaseManager:
                 return True
             return False
         except Exception as e:
-            print(f"Lỗi lưu dự đoán: {e}")
+            print(f"❌ Lỗi lưu dự đoán: {e}")
             return False
