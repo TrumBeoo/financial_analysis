@@ -618,62 +618,128 @@ def register_enhanced_callbacks(app):
     
 @cache_result(timeout=PERFORMANCE_CONFIG['cache_timeout'])
 def get_filtered_data(sector='all', days=30, sentiment_type='all', limit=1000):
-    """Lấy dữ liệu đã lọc theo các tiêu chí với cache"""
+    """Lấy dữ liệu đã lọc theo các tiêu chí với cache - CẢI THIỆN"""
     # Try cache first
     cache_key = f"filtered_data_{sector}_{days}_{sentiment_type}_{limit}"
     cached_result = dashboard_cache.get(cache_key)
     if cached_result is not None:
+        logger.info(f"Cache hit for: {cache_key}")
         return cached_result
+    
+    logger.info(f"Loading data with filters: sector={sector}, days={days}, sentiment={sentiment_type}")
     
     df = db_manager.load_processed_data(limit=limit)
     
     if df.empty:
+        logger.warning("No data loaded from database")
         return df
+    
+    logger.info(f"Loaded {len(df)} records from database")
+    logger.info(f"Columns available: {df.columns.tolist()}")
     
     # Optimize DataFrame
     df = optimize_dataframe(df)
     
-    # Filter by time
-    if 'crawl_time' in df.columns:
-        cutoff_date = datetime.now() - timedelta(days=days)
-        df = df[pd.to_datetime(df['crawl_time']) >= cutoff_date]
+    # BƯỚC 1: Đảm bảo có cột predicted_sentiment
+    if 'predicted_sentiment' not in df.columns:
+        if 'predicted_label' in df.columns:
+            df['predicted_sentiment'] = df['predicted_label'].map({
+                0: 'Tiêu cực', 
+                1: 'Trung tính', 
+                2: 'Tích cực'
+            })
+            logger.info("Created predicted_sentiment from predicted_label")
+        else:
+            logger.warning("Neither predicted_sentiment nor predicted_label found in data")
+            df['predicted_sentiment'] = 'Trung tính'
     
-    # FIX: Xử lý sectors column đúng cách
-    if 'sectors' in df.columns:
-        def process_sector(sector_value):
-            """Xử lý giá trị sector - có thể là string hoặc list"""
-            if pd.isna(sector_value):
+    # BƯỚC 2: Xử lý cột sectors
+    if 'sectors' not in df.columns:
+        logger.warning("No sectors column found, creating default")
+        df['sectors'] = 'Other'
+    else:
+        def normalize_sector(sector_value):
+            """Chuẩn hóa giá trị sector - CẢI THIỆN"""
+            try:
+                # Xử lý giá trị rỗng
+                if pd.isna(sector_value) or sector_value == '' or sector_value == 'nan':
+                    return 'Other'
+                
+                # Convert to string
+                sector_str = str(sector_value).strip()
+                
+                # Nếu là chuỗi rỗng sau khi strip
+                if not sector_str or sector_str == 'nan':
+                    return 'Other'
+                
+                # THÊM: Mapping tiếng Việt -> tiếng Anh
+                vn_to_en_map = {
+                    'bất_động_sản': 'Real Estate',
+                    'ngân_hàng': 'Banking',
+                    'chứng_khoán': 'Finance',
+                    'công_nghệ': 'Technology',
+                    'sản_xuất': 'Manufacturing',
+                    'năng_lượng': 'Energy',
+                    'vận_tải': 'Transportation',
+                    'nông_nghiệp': 'Agriculture',
+                    'bán_lẻ': 'Retail',
+                    'tổng_hợp': 'Other'
+                }
+                
+                # Nếu chứa dấu phẩy (comma-separated), lấy ngành đầu tiên
+                if ',' in sector_str:
+                    sectors_list = [s.strip() for s in sector_str.split(',')]
+                    main_sector = sectors_list[0] if sectors_list else 'Other'
+                else:
+                    main_sector = sector_str
+                
+                # Mapping tiếng Việt sang tiếng Anh
+                if main_sector in vn_to_en_map:
+                    main_sector = vn_to_en_map[main_sector]
+                
+                # Mapping thêm từ SECTOR_MAPPINGS
+                mapped_sector = SECTOR_MAPPINGS.get(main_sector, main_sector)
+                
+                # Kiểm tra mapped_sector có hợp lệ không
+                valid_sectors = ['Banking', 'Real Estate', 'Finance', 'Technology', 
+                            'Manufacturing', 'Energy', 'Transportation', 
+                            'Agriculture', 'Retail', 'Other']
+                
+                if mapped_sector in valid_sectors:
+                    return mapped_sector
+                else:
+                    return 'Other'
+                    
+            except Exception as e:
+                logger.error(f"Error normalizing sector '{sector_value}': {e}")
                 return 'Other'
             
-            # Nếu là string chứa comma-separated values
-            if isinstance(sector_value, str):
-                sectors_list = [s.strip() for s in sector_value.split(',')]
-                # Lấy ngành đầu tiên (chính)
-                main_sector = sectors_list[0] if sectors_list else 'Other'
-                # Map nếu cần
-                return SECTOR_MAPPINGS.get(main_sector, main_sector)
-            
-            # Nếu là list
-            elif isinstance(sector_value, list):
-                main_sector = sector_value[0] if sector_value else 'Other'
-                return SECTOR_MAPPINGS.get(main_sector, main_sector)
-            
-            return 'Other'
-        
-        df['sectors'] = df['sectors'].apply(process_sector)
+        df['sectors'] = df['sectors'].apply(normalize_sector)
+        logger.info(f"Normalized sectors. Unique values: {df['sectors'].unique().tolist()}")
     
-    # Filter by sector
-    if sector != 'all' and 'sectors' in df.columns:
+    # BƯỚC 3: Filter by time
+    if 'crawl_time' in df.columns:
+        try:
+            cutoff_date = datetime.now() - timedelta(days=days)
+            df['crawl_time'] = pd.to_datetime(df['crawl_time'], errors='coerce')
+            df = df[df['crawl_time'] >= cutoff_date]
+            logger.info(f"After time filter: {len(df)} records")
+        except Exception as e:
+            logger.error(f"Error filtering by time: {e}")
+    
+    # BƯỚC 4: Filter by sector
+    if sector != 'all':
+        before_count = len(df)
         df = df[df['sectors'] == sector]
+        logger.info(f"Sector filter '{sector}': {before_count} -> {len(df)} records")
     
-    # Filter by sentiment
+    # BƯỚC 5: Filter by sentiment
     if sentiment_type != 'all':
-        if 'predicted_sentiment' in df.columns:
-            df = df[df['predicted_sentiment'] == sentiment_type]
-        elif 'predicted_label' in df.columns:
-            label_map = {'Tích cực': 2, 'Trung tính': 1, 'Tiêu cực': 0}
-            if sentiment_type in label_map:
-                df = df[df['predicted_label'] == label_map[sentiment_type]]
+        before_count = len(df)
+        df = df[df['predicted_sentiment'] == sentiment_type]
+        logger.info(f"Sentiment filter '{sentiment_type}': {before_count} -> {len(df)} records")
+    
+    logger.info(f"Final filtered data: {len(df)} records")
     
     # Cache result
     dashboard_cache.set(cache_key, df)
