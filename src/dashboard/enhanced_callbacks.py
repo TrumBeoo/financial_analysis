@@ -439,6 +439,17 @@ def register_enhanced_callbacks(app):
             if not result['success']:
                 error_alert = dbc.Alert(f"Lỗi: {result.get('error', 'Không thể trích xuất nội dung')}", color='danger')
                 return error_alert, error_alert
+
+            # Save raw data to news_articles
+            raw_data = {
+                'source': result['source'],
+                'title': result['title'],
+                'summary': result['content'][:200],
+                'link': url,
+                'crawl_time': datetime.now()
+            }
+            df_raw = pd.DataFrame([raw_data])
+            db_manager.save_news_data(df_raw)
             
             # Preprocess
             full_text = f"{result['title']} {result['content']}"
@@ -451,27 +462,42 @@ def register_enhanced_callbacks(app):
             # Extract keywords
             keywords = extract_keywords(processed['cleaned_text'])
             
-            # Save to database
-            save_data = {
+            # Save processed data
+            processed_data = {
                 'source': result['source'],
                 'title': result['title'],
                 'content': result['content'][:500],
                 'link': url,
                 'crawl_time': datetime.now(),
                 'cleaned_text': processed['cleaned_text'],
-                'sentiment_positive': sentiment['positive'],
-                'sentiment_negative': sentiment['negative'],
-                'sentiment_neutral': sentiment['neutral'],
+                'sentiment_positive': float(sentiment['positive']),
+                'sentiment_negative': float(sentiment['negative']),
+                'sentiment_neutral': float(sentiment['neutral']),
                 'predicted_label': sentiment['label'],
                 'predicted_sentiment': sentiment_label,
-                'sectors': 'Other'
+                'sectors': ','.join(processed['sectors']) if processed['sectors'] else 'Other',
+                'processed_at': datetime.now()
             }
-            
-            df_save = pd.DataFrame([save_data])
-            db_manager.save_processed_data(df_save)
+            df_processed = pd.DataFrame([processed_data])
+            db_manager.save_processed_data(df_processed)
+
+            # Save prediction data
+            prediction_data = {
+                'article_id': url,  # Or use a hash
+                'predicted_label': sentiment['label'],
+                'predicted_sentiment': sentiment_label,
+                'confidence_scores': {
+                    'positive': float(sentiment['positive']),
+                    'negative': float(sentiment['negative']),
+                    'neutral': float(sentiment['neutral'])
+                },
+                'model_version': '1.0',
+                'predicted_at': datetime.now()
+            }
+            db_manager.save_predictions(prediction_data)
             
             # Basic result
-            basic_result = dbc.Alert(f"✅ Phân tích thành công! Sentiment: {sentiment_label}", color='success')
+            basic_result = dbc.Alert(f"Phân tích thành công! Sentiment: {sentiment_label}", color='success')
             
             # Detailed result
             sentiment_color_map = {'Tích cực': 'success', 'Trung tính': 'secondary', 'Tiêu cực': 'danger'}
@@ -479,17 +505,17 @@ def register_enhanced_callbacks(app):
             
             detailed_result = dbc.Card([
                 dbc.CardHeader([
-                    html.H4("🔍 Phân tích chi tiết bài viết", className="mb-0")
+                    html.H4("Phân tích chi tiết bài viết", className="mb-0")
                 ]),
                 dbc.CardBody([
                     dbc.Row([
                         dbc.Col([
-                            html.H5("📰 Thông tin bài viết"),
+                            html.H5("Thông tin bài viết"),
                             html.P([html.Strong("Tiêu đề: "), result['title']]),
                             html.P([html.Strong("Nguồn: "), result['source']]),
                             html.P([html.Strong("Ngày: "), datetime.now().strftime('%d/%m/%Y %H:%M')]),
                             html.Hr(),
-                            html.H5("📊 Phân tích Sentiment"),
+                            html.H5("Phân tích Sentiment"),
                             dbc.Badge(sentiment_label, color=color, className='fs-6 mb-3'),
                             html.Div([
                                 html.P(f"Tích cực: {sentiment['positive']:.2f}", className='mb-1'),
@@ -501,16 +527,16 @@ def register_enhanced_callbacks(app):
                             ], className='mb-3')
                         ], width=6),
                         dbc.Col([
-                            html.H5("📝 Tóm tắt nội dung"),
+                            html.H5("Tóm tắt nội dung"),
                             html.P(result['content'][:400] + '...' if len(result['content']) > 400 else result['content']),
                             html.Hr(),
-                            html.H5("🔑 Từ khóa quan trọng"),
+                            html.H5("Từ khóa quan trọng"),
                             html.Div([
                                 dbc.Badge(keyword[0], color='info', className='me-1 mb-1') 
                                 for keyword in keywords[:10]
                             ]),
                             html.Hr(),
-                            html.H5("🔗 Liên kết"),
+                            html.H5("Liên kết"),
                             html.A("Xem bài gốc", href=url, target="_blank", className="btn btn-outline-primary")
                         ], width=6)
                     ])
@@ -602,3 +628,6 @@ def extract_keywords(text, top_n=10):
     # Return top keywords with count
     sorted_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
     return sorted_words[:top_n]
+
+
+    
