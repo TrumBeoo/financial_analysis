@@ -258,12 +258,12 @@ def register_enhanced_callbacks(app):
     @app.callback(
         Output('sentiment-timeline', 'figure'),
         [Input('interval-component', 'n_intervals'),
-         Input('sector-filter', 'value'),
-         Input('time-filter', 'value'),
-         Input('sentiment-filter', 'value')]
+        Input('sector-filter', 'value'),
+        Input('time-filter', 'value'),
+        Input('sentiment-filter', 'value')]
     )
     def update_timeline(n, sector, days, sentiment_type):
-        """Timeline với smooth line và trend"""
+        """Timeline với đầy đủ các ngày và hover chi tiết"""
         df = get_filtered_data(sector, days, sentiment_type)
         
         if df.empty or 'crawl_time' not in df.columns:
@@ -271,13 +271,13 @@ def register_enhanced_callbacks(app):
         
         # Ensure crawl_time is datetime
         df['crawl_time'] = pd.to_datetime(df['crawl_time'], errors='coerce')
+        df = df[df['crawl_time'].notna()]
         df['date'] = df['crawl_time'].dt.date
         
         # Prepare sentiment - CHUẨN HÓA SANG TIẾNG VIỆT
         if 'predicted_sentiment' not in df.columns and 'predicted_label' in df.columns:
             df['predicted_sentiment'] = df['predicted_label'].map({0: 'Tiêu cực', 1: 'Trung tính', 2: 'Tích cực'})
         elif 'predicted_sentiment' in df.columns:
-            # Convert to string first
             df['predicted_sentiment'] = df['predicted_sentiment'].astype(str)
             sentiment_map = {
                 'Negative': 'Tiêu cực',
@@ -289,33 +289,113 @@ def register_enhanced_callbacks(app):
             }
             df['predicted_sentiment'] = df['predicted_sentiment'].map(sentiment_map).fillna('Trung tính')
         
-        # Group by date and sentiment
-        timeline_data = df.groupby(['date', 'predicted_sentiment']).size().reset_index(name='count')
+        # BƯỚC 1: Tạo timeline đầy đủ từ ngày đầu đến ngày cuối
+        if len(df) > 0:
+            min_date = df['date'].min()
+            max_date = df['date'].max()
+            
+            # Tạo danh sách đầy đủ tất cả các ngày
+            all_dates = pd.date_range(start=min_date, end=max_date, freq='D').date
+            
+            # BƯỚC 2: Đếm số lượng bài viết theo ngày và sentiment
+            timeline_data = df.groupby(['date', 'predicted_sentiment']).size().reset_index(name='count')
+            
+            # BƯỚC 3: Tạo DataFrame đầy đủ với tất cả ngày và tất cả sentiment
+            sentiments = ['Tích cực', 'Trung tính', 'Tiêu cực']
+            
+            # Tạo MultiIndex với tất cả các kết hợp date x sentiment
+            full_index = pd.MultiIndex.from_product(
+                [all_dates, sentiments],
+                names=['date', 'predicted_sentiment']
+            )
+            
+            # Tạo DataFrame đầy đủ
+            timeline_full = pd.DataFrame(index=full_index).reset_index()
+            
+            # BƯỚC 4: Merge với dữ liệu thực tế và điền 0 cho missing values
+            timeline_full = timeline_full.merge(
+                timeline_data,
+                on=['date', 'predicted_sentiment'],
+                how='left'
+            ).fillna({'count': 0})
+            
+            # Convert count to int
+            timeline_full['count'] = timeline_full['count'].astype(int)
+            
+            # Convert date to datetime for plotly
+            timeline_full['date'] = pd.to_datetime(timeline_full['date'])
+            
+            logger.info(f"Timeline data shape: {timeline_full.shape}")
+            logger.info(f"Date range: {timeline_full['date'].min()} to {timeline_full['date'].max()}")
+            logger.info(f"Sample data:\n{timeline_full.head(20)}")
+            
+        else:
+            return go.Figure()
         
-        logger.info(f"Timeline data shape: {timeline_data.shape}")
-        logger.info(f"Timeline unique sentiments: {timeline_data['predicted_sentiment'].unique().tolist()}")
-        logger.info(f"Timeline sample:\n{timeline_data.tail(10)}")
-        
+        # BƯỚC 5: Vẽ biểu đồ với hover chi tiết
         fig = go.Figure()
         
-        for sentiment in ['Tích cực', 'Trung tính', 'Tiêu cực']:
-            sentiment_data = timeline_data[timeline_data['predicted_sentiment'] == sentiment]
-            if not sentiment_data.empty:
-                fig.add_trace(go.Scatter(
-                    x=sentiment_data['date'],
-                    y=sentiment_data['count'],
-                    mode='lines+markers',
-                    name=sentiment,
-                    line=dict(color=SENTIMENT_COLORS[sentiment], width=3),
-                    marker=dict(size=6),
-                    hovertemplate=f'<b>{sentiment}</b><br>Ngày: %{{x}}<br>Số bài: %{{y}}<extra></extra>'
-                ))
+        for sentiment in sentiments:
+            sentiment_data = timeline_full[timeline_full['predicted_sentiment'] == sentiment]
+            
+            # Tạo hover text chi tiết
+            hover_texts = []
+            for _, row in sentiment_data.iterrows():
+                hover_text = (
+                    f"<b>Ngày:</b> {row['date'].strftime('%d/%m/%Y')}<br>"
+                    f"<b>Sentiment:</b> {sentiment}<br>"
+                    f"<b>Số bài viết:</b> {row['count']}<br>"
+                    f"<extra></extra>"
+                )
+                hover_texts.append(hover_text)
+            
+            fig.add_trace(go.Scatter(
+                x=sentiment_data['date'],
+                y=sentiment_data['count'],
+                mode='lines+markers',
+                name=sentiment,
+                line=dict(
+                    color=SENTIMENT_COLORS[sentiment],
+                    width=2,
+                    shape='spline'  # Đường cong mượt hơn
+                ),
+                marker=dict(
+                    size=6,
+                    symbol='circle',
+                    line=dict(width=1, color='white')
+                ),
+                hovertemplate='%{text}',
+                text=hover_texts,
+                connectgaps=False  # Không nối các gap
+            ))
         
+        # BƯỚC 6: Cấu hình layout
         fig.update_layout(
-            xaxis_title='Ngày',
-            yaxis_title='Số lượng bài viết',
-            hovermode='x unified',
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            xaxis=dict(
+                title='Ngày',
+                tickformat='%d/%m',
+                dtick='D1' if days <= 7 else 'D2' if days <= 30 else 'D7',  # Tự động điều chỉnh tick spacing
+                tickangle=-45,
+                showgrid=True,
+                gridcolor='rgba(128, 128, 128, 0.2)'
+            ),
+            yaxis=dict(
+                title='Số lượng bài viết',
+                showgrid=True,
+                gridcolor='rgba(128, 128, 128, 0.2)',
+                zeroline=True
+            ),
+            hovermode='x unified',  # Hiển thị tất cả values khi hover vào một ngày
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            ),
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            height=400
         )
         
         return fig

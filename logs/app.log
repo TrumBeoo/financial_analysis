@@ -1433,3 +1433,93 @@
 2025-11-10 08:35:31,735 [INFO] src.dashboard.enhanced_callbacks: Normalized sectors. Unique values: ['Finance', 'Other', 'Technology', 'Energy', 'Real Estate', 'Manufacturing', 'Agriculture']
 2025-11-10 08:35:31,743 [INFO] src.dashboard.enhanced_callbacks: After time filter: 20 records (from 2025-10-11 08:35:31.740487 to now)
 2025-11-10 08:35:31,747 [INFO] src.dashboard.enhanced_callbacks: Final filtered data: 20 records
+2025-11-10 08:35:41,717 [INFO] src.database.db_manager: Loaded 413 processed with avg content: 3575
+2025-11-10 08:35:41,722 [INFO] src.dashboard.enhanced_callbacks: Loaded 413 records from database
+2025-11-10 08:35:41,725 [INFO] src.dashboard.enhanced_callbacks: Columns available: ['source', 'title', 'summary', 'content', 'link', 'crawl_time', 'publish_date', 'cleaned_text', 'sentiment_positive', 'sentiment_negative', 'sentiment_neutral', 'predicted_label', 'sectors', 'processed_at', 'predicted_sentiment']
+2025-11-10 08:35:41,798 [INFO] src.database.db_manager: Loaded 413 processed with avg content: 3575
+2025-11-10 08:35:41,811 [INFO] src.dashboard.enhanced_callbacks: Normalized sectors. Unique values: ['Finance', 'Other', 'Technology', 'Energy', 'Manufacturing', 'Real Estate', 'Agriculture', 'Banking', 'Transportation', 'Retail']
+2025-11-10 08:35:41,816 [INFO] src.dashboard.enhanced_callbacks: Loaded 413 records from database
+2025-11-10 08:35:41,818 [INFO] src.dashboard.enhanced_callbacks: Columns available: ['source', 'title', 'summary', 'content', 'link', 'crawl_time', 'publish_date', 'cleaned_text', 'sentiment_positive', 'sentiment_negative', 'sentiment_neutral', 'predicted_label', 'sectors', 'processed_at', 'predicted_sentiment']
+2025-11-10 08:35:41,844 [INFO] src.dashboard.enhanced_callbacks: After time filter: 413 records (from 2025-10-11 08:35:41.812033 to now)
+2025-11-10 08:35:41,852 [INFO] src.dashboard.enhanced_callbacks: Final filtered data: 413 records
+2025-11-10 08:35:41,855 [INFO] src.database.db_manager: Loaded 413 processed with avg content: 3575
+2025-11-10 08:35:41,898 [INFO] src.database.db_manager: Loaded 413 processed with avg content: 3575
+2025-11-10 08:35:41,898 [INFO] src.dashboard.enhanced_callbacks: Loaded 413 records from database
+2025-11-10 08:35:41,911 [INFO] src.dashboard.enhanced_callbacks: Columns available: ['source', 'title', 'summary', 'content', 'link', 'crawl_time', 'publish_date', 'cleaned_text', 'sentiment_positive', 'sentiment_negative', 'sentiment_neutral', 'predicted_label', 'sectors', 'processed_at', 'predicted_sentiment']
+2025-11-10 08:35:41,918 [INFO] src.dashboard.enhanced_callbacks: Loaded 413 records from database
+2025-11-10 08:35:41,932 [INFO] src.dashboard.enhanced_callbacks: Columns available: ['source', 'title', 'summary', 'content', 'link', 'crawl_time', 'publish_date', 'cleaned_text', 'sentiment_positive', 'sentiment_negative', 'sentiment_neutral', 'predicted_label', 'sectors', 'processed_at', 'predicted_sentiment']
+2025-11-10 08:35:42,012 [INFO] src.dashboard.enhanced_callbacks: Normalized sectors. Unique values: ['Finance', 'Other', 'Technology', 'Energy', 'Manufacturing', 'Real Estate', 'Agriculture', 'Banking', 'Transportation', 'Retail']
+2025-11-10 08:35:42,035 [INFO] src.dashboard.enhanced_callbacks: Normalized sectors. Unique values: ['Finance', 'Other', 'Technology', 'Energy', 'Manufacturing', 'Real Estate', 'Agriculture', 'Banking', 'Transportation', 'Retail']
+2025-11-10 08:35:42,051 [INFO] src.dashboard.enhanced_callbacks: Normalized sectors. Unique values: ['Finance', 'Other', 'Technology', 'Energy', 'Manufacturing', 'Real Estate', 'Agriculture', 'Banking', 'Transportation', 'Retail']
+2025-11-10 08:35:42,066 [INFO] src.dashboard.enhanced_callbacks: After time filter: 413 records (from 2025-10-11 08:35:42.061227 to now)
+2025-11-10 08:35:42,071 [INFO] src.dashboard.enhanced_callbacks: After time filter: 413 records (from 2025-10-11 08:35:42.053400 to now)
+2025-11-10 08:35:42,072 [INFO] src.dashboard.enhanced_callbacks: Final filtered data: 413 records
+2025-11-10 08:35:42,073 [INFO] src.dashboard.enhanced_callbacks: Final filtered data: 413 records
+2025-11-10 08:35:42,073 [INFO] src.dashboard.enhanced_callbacks: After time filter: 413 records (from 2025-10-11 08:35:42.056379 to now)
+2025-11-10 08:35:42,106 [INFO] src.dashboard.enhanced_callbacks: Final filtered data: 413 records
+2025-11-10 08:35:42,131 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (10, 3)
+2025-11-10 08:36:00,179 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (10, 3)
+2025-11-10 08:40:41,727 [INFO] __main__: Starting Financial News Analysis Application...
+2025-11-10 08:40:41,727 [INFO] src.dashboard.app: Starting dashboard on localhost:8050
+2025-11-10 08:40:41,727 [INFO] dash.dash: Dash is running on http://localhost:8050/
+
+2025-11-10 08:41:04,403 [INFO] __main__: Starting Financial News Analysis Application...
+2025-11-10 08:41:04,403 [INFO] src.dashboard.app: Starting dashboard on localhost:8050
+2025-11-10 08:41:05,510 [INFO] src.dashboard.enhanced_callbacks: Loading data with filters: sector=all, days=30, sentiment=all
+2025-11-10 08:41:05,609 [INFO] src.dashboard.enhanced_callbacks: Loading data with filters: sector=all, days=30, sentiment=all
+2025-11-10 08:41:05,627 [INFO] src.dashboard.enhanced_callbacks: Loading data with filters: sector=all, days=30, sentiment=all
+2025-11-10 08:41:05,630 [INFO] src.dashboard.enhanced_callbacks: Loading data with filters: sector=all, days=30, sentiment=all
+2025-11-10 08:41:05,722 [INFO] src.dashboard.enhanced_callbacks: Loading data with filters: sector=all, days=30, sentiment=all
+2025-11-10 08:41:05,824 [INFO] src.dashboard.enhanced_callbacks: Loading data with filters: sector=all, days=30, sentiment=all
+2025-11-10 08:41:08,886 [INFO] src.database.db_manager: Loaded 413 processed with avg content: 3575
+2025-11-10 08:41:08,902 [INFO] src.dashboard.enhanced_callbacks: Loaded 413 records from database
+2025-11-10 08:41:08,902 [INFO] src.database.db_manager: Loaded 413 processed with avg content: 3575
+2025-11-10 08:41:08,902 [INFO] src.dashboard.enhanced_callbacks: Columns available: ['source', 'title', 'summary', 'content', 'link', 'crawl_time', 'publish_date', 'cleaned_text', 'sentiment_positive', 'sentiment_negative', 'sentiment_neutral', 'predicted_label', 'sectors', 'processed_at', 'predicted_sentiment']
+2025-11-10 08:41:08,918 [INFO] src.dashboard.enhanced_callbacks: Loaded 413 records from database
+2025-11-10 08:41:08,926 [INFO] src.dashboard.enhanced_callbacks: Columns available: ['source', 'title', 'summary', 'content', 'link', 'crawl_time', 'publish_date', 'cleaned_text', 'sentiment_positive', 'sentiment_negative', 'sentiment_neutral', 'predicted_label', 'sectors', 'processed_at', 'predicted_sentiment']
+2025-11-10 08:41:08,964 [INFO] src.dashboard.enhanced_callbacks: Normalized sectors. Unique values: ['Finance', 'Other', 'Technology', 'Energy', 'Manufacturing', 'Real Estate', 'Agriculture', 'Banking', 'Transportation', 'Retail']
+2025-11-10 08:41:08,972 [INFO] src.dashboard.enhanced_callbacks: Normalized sectors. Unique values: ['Finance', 'Other', 'Technology', 'Energy', 'Manufacturing', 'Real Estate', 'Agriculture', 'Banking', 'Transportation', 'Retail']
+2025-11-10 08:41:08,977 [INFO] src.dashboard.enhanced_callbacks: After time filter: 413 records (from 2025-10-11 08:41:08.970449 to now)
+2025-11-10 08:41:08,980 [INFO] src.dashboard.enhanced_callbacks: After time filter: 413 records (from 2025-10-11 08:41:08.972458 to now)
+2025-11-10 08:41:08,981 [INFO] src.dashboard.enhanced_callbacks: Final filtered data: 413 records
+2025-11-10 08:41:08,981 [INFO] src.dashboard.enhanced_callbacks: Final filtered data: 413 records
+2025-11-10 08:41:09,018 [INFO] src.database.db_manager: Loaded 413 processed with avg content: 3575
+2025-11-10 08:41:09,020 [INFO] src.dashboard.enhanced_callbacks: Loaded 413 records from database
+2025-11-10 08:41:09,020 [INFO] src.dashboard.enhanced_callbacks: Columns available: ['source', 'title', 'summary', 'content', 'link', 'crawl_time', 'publish_date', 'cleaned_text', 'sentiment_positive', 'sentiment_negative', 'sentiment_neutral', 'predicted_label', 'sectors', 'processed_at', 'predicted_sentiment']
+2025-11-10 08:41:09,049 [INFO] src.dashboard.enhanced_callbacks: Normalized sectors. Unique values: ['Finance', 'Other', 'Technology', 'Energy', 'Manufacturing', 'Real Estate', 'Agriculture', 'Banking', 'Transportation', 'Retail']
+2025-11-10 08:41:09,054 [INFO] src.dashboard.enhanced_callbacks: After time filter: 413 records (from 2025-10-11 08:41:09.050381 to now)
+2025-11-10 08:41:09,055 [INFO] src.dashboard.enhanced_callbacks: Final filtered data: 413 records
+2025-11-10 08:41:09,383 [INFO] src.dashboard.enhanced_callbacks: Loading data with filters: sector=all, days=30, sentiment=all
+2025-11-10 08:41:12,271 [INFO] src.database.db_manager: Loaded 20 processed with avg content: 4123
+2025-11-10 08:41:12,273 [INFO] src.dashboard.enhanced_callbacks: Loaded 20 records from database
+2025-11-10 08:41:12,273 [INFO] src.dashboard.enhanced_callbacks: Columns available: ['source', 'title', 'summary', 'content', 'link', 'crawl_time', 'publish_date', 'cleaned_text', 'sentiment_positive', 'sentiment_negative', 'sentiment_neutral', 'predicted_label', 'sectors', 'processed_at']
+2025-11-10 08:41:12,284 [INFO] src.dashboard.enhanced_callbacks: Created predicted_sentiment from predicted_label
+2025-11-10 08:41:12,284 [INFO] src.dashboard.enhanced_callbacks: Normalized sectors. Unique values: ['Finance', 'Other', 'Technology', 'Energy', 'Real Estate', 'Manufacturing', 'Agriculture']
+2025-11-10 08:41:12,291 [INFO] src.dashboard.enhanced_callbacks: After time filter: 20 records (from 2025-10-11 08:41:12.284369 to now)
+2025-11-10 08:41:12,291 [INFO] src.dashboard.enhanced_callbacks: Final filtered data: 20 records
+2025-11-10 08:41:23,924 [INFO] src.database.db_manager: Loaded 413 processed with avg content: 3575
+2025-11-10 08:41:23,940 [INFO] src.dashboard.enhanced_callbacks: Loaded 413 records from database
+2025-11-10 08:41:23,940 [INFO] src.dashboard.enhanced_callbacks: Columns available: ['source', 'title', 'summary', 'content', 'link', 'crawl_time', 'publish_date', 'cleaned_text', 'sentiment_positive', 'sentiment_negative', 'sentiment_neutral', 'predicted_label', 'sectors', 'processed_at', 'predicted_sentiment']
+2025-11-10 08:41:23,963 [INFO] src.database.db_manager: Loaded 413 processed with avg content: 3575
+2025-11-10 08:41:23,994 [INFO] src.database.db_manager: Loaded 413 processed with avg content: 3575
+2025-11-10 08:41:23,998 [INFO] src.dashboard.enhanced_callbacks: Normalized sectors. Unique values: ['Finance', 'Other', 'Technology', 'Energy', 'Manufacturing', 'Real Estate', 'Agriculture', 'Banking', 'Transportation', 'Retail']
+2025-11-10 08:41:23,998 [INFO] src.dashboard.enhanced_callbacks: Loaded 413 records from database
+2025-11-10 08:41:24,001 [INFO] src.dashboard.enhanced_callbacks: After time filter: 413 records (from 2025-10-11 08:41:23.999771 to now)
+2025-11-10 08:41:24,002 [INFO] src.dashboard.enhanced_callbacks: Loaded 413 records from database
+2025-11-10 08:41:24,002 [INFO] src.dashboard.enhanced_callbacks: Columns available: ['source', 'title', 'summary', 'content', 'link', 'crawl_time', 'publish_date', 'cleaned_text', 'sentiment_positive', 'sentiment_negative', 'sentiment_neutral', 'predicted_label', 'sectors', 'processed_at', 'predicted_sentiment']
+2025-11-10 08:41:24,002 [INFO] src.dashboard.enhanced_callbacks: Final filtered data: 413 records
+2025-11-10 08:41:24,002 [INFO] src.dashboard.enhanced_callbacks: Columns available: ['source', 'title', 'summary', 'content', 'link', 'crawl_time', 'publish_date', 'cleaned_text', 'sentiment_positive', 'sentiment_negative', 'sentiment_neutral', 'predicted_label', 'sectors', 'processed_at', 'predicted_sentiment']
+2025-11-10 08:41:24,050 [INFO] src.dashboard.enhanced_callbacks: Normalized sectors. Unique values: ['Finance', 'Other', 'Technology', 'Energy', 'Manufacturing', 'Real Estate', 'Agriculture', 'Banking', 'Transportation', 'Retail']
+2025-11-10 08:41:24,059 [INFO] src.dashboard.enhanced_callbacks: Normalized sectors. Unique values: ['Finance', 'Other', 'Technology', 'Energy', 'Manufacturing', 'Real Estate', 'Agriculture', 'Banking', 'Transportation', 'Retail']
+2025-11-10 08:41:24,063 [INFO] src.dashboard.enhanced_callbacks: After time filter: 413 records (from 2025-10-11 08:41:24.061088 to now)
+2025-11-10 08:41:24,063 [INFO] src.dashboard.enhanced_callbacks: Final filtered data: 413 records
+2025-11-10 08:41:24,071 [INFO] src.dashboard.enhanced_callbacks: After time filter: 413 records (from 2025-10-11 08:41:24.059062 to now)
+2025-11-10 08:41:24,071 [INFO] src.dashboard.enhanced_callbacks: Final filtered data: 413 records
+2025-11-10 08:41:24,102 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (60, 3)
+2025-11-10 08:41:24,110 [INFO] src.dashboard.enhanced_callbacks: Date range: 2025-10-22 00:00:00 to 2025-11-10 00:00:00
+2025-11-10 08:41:35,739 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (60, 3)
+2025-11-10 08:41:35,740 [INFO] src.dashboard.enhanced_callbacks: Date range: 2025-10-22 00:00:00 to 2025-11-10 00:00:00
+2025-11-10 08:42:05,734 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (60, 3)
+2025-11-10 08:42:05,735 [INFO] src.dashboard.enhanced_callbacks: Date range: 2025-10-22 00:00:00 to 2025-11-10 00:00:00
+2025-11-10 08:42:36,107 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (60, 3)
+2025-11-10 08:42:36,107 [INFO] src.dashboard.enhanced_callbacks: Date range: 2025-10-22 00:00:00 to 2025-11-10 00:00:00
