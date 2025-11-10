@@ -21,3 +21,14 @@ tqdm==4.66.1
 
 # WSGI Server
 gunicorn==21.2.0
+
+-r requirements.txt
+underthesea==6.7.0
+pyvi==0.1.1
+vncorenlp==1.0.3
+scikit-learn==1.3.2
+transformers==4.35.2
+torch==2.1.1
+scrapy==2.11.0
+selenium==4.15.2
+newspaper3k==0.2.8
