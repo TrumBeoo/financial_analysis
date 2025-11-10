@@ -471,6 +471,26 @@ def create_dashboard_layout():
                         ], width=6),
                     ], className='mb-4'),
                     
+                    # Pie Charts Row
+                    dbc.Row([
+                        dbc.Col([
+                            dbc.Card([
+                                dbc.CardHeader("Phân bố Sentiment"),
+                                dbc.CardBody([
+                                    dcc.Graph(id='sentiment-pie-chart')
+                                ])
+                            ])
+                        ], width=6),
+                        dbc.Col([
+                            dbc.Card([
+                                dbc.CardHeader("Phân bố theo Ngành"),
+                                dbc.CardBody([
+                                    dcc.Graph(id='sector-pie-chart')
+                                ])
+                            ])
+                        ], width=6),
+                    ], className='mb-4'),
+                    
                     # Sector Analysis
                     dbc.Row([
                         dbc.Col([

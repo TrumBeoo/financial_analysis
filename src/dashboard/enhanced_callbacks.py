@@ -109,6 +109,89 @@ def register_enhanced_callbacks(app):
         fig.update_layout(height=300)
         return fig
     
+    # Sentiment Pie Chart
+    @app.callback(
+        Output('sentiment-pie-chart', 'figure'),
+        [Input('interval-component', 'n_intervals'),
+         Input('sector-filter', 'value'),
+         Input('time-filter', 'value')]
+    )
+    def update_sentiment_pie(n, sector, days):
+        """Biểu đồ tròn phân bố sentiment"""
+        df = get_filtered_data(sector, days, 'all')
+        
+        if df.empty or 'predicted_sentiment' not in df.columns:
+            return go.Figure()
+        
+        sentiment_counts = df['predicted_sentiment'].value_counts()
+        
+        fig = go.Figure(data=[go.Pie(
+            labels=sentiment_counts.index,
+            values=sentiment_counts.values,
+            marker=dict(colors=[SENTIMENT_COLORS.get(s, '#95a5a6') for s in sentiment_counts.index]),
+            hole=0.4,
+            textinfo='label+percent',
+            textposition='inside',
+            hovertemplate='<b>%{label}</b><br>Số lượng: %{value}<br>Tỷ lệ: %{percent}<extra></extra>'
+        )])
+        
+        fig.update_layout(
+            showlegend=False,
+            height=350,
+            margin=dict(l=10, r=10, t=30, b=10)
+        )
+        
+        return fig
+    
+    # Sector Pie Chart
+    @app.callback(
+        Output('sector-pie-chart', 'figure'),
+        [Input('interval-component', 'n_intervals'),
+         Input('time-filter', 'value'),
+         Input('sentiment-filter', 'value')]
+    )
+    def update_sector_pie(n, days, sentiment_type):
+        """Biểu đồ tròn phân bố theo ngành"""
+        df = get_filtered_data('all', days, sentiment_type)
+        
+        if df.empty or 'sectors' not in df.columns:
+            return go.Figure()
+        
+        sector_counts = df['sectors'].value_counts()
+        
+        # Màu sắc cho các ngành
+        sector_colors = {
+            'Banking': '#3498db',
+            'Energy': '#f39c12',
+            'Real Estate': '#e74c3c',
+            'Technology': '#9b59b6',
+            'Manufacturing': '#1abc9c',
+            'Transportation': '#34495e',
+            'Agriculture': '#27ae60',
+            'Retail': '#e67e22',
+            'Finance': '#2ecc71',
+            'Other': '#95a5a6'
+        }
+        
+        fig = go.Figure(data=[go.Pie(
+            labels=sector_counts.index,
+            values=sector_counts.values,
+            marker=dict(colors=[sector_colors.get(s, '#95a5a6') for s in sector_counts.index]),
+            hole=0.4,
+            textinfo='percent',
+            textposition='inside',
+            hovertemplate='<b>%{label}</b><br>Số bài viết: %{value}<br>Tỷ lệ: %{percent}<extra></extra>'
+        )])
+        
+        fig.update_layout(
+            showlegend=True,
+            height=350,
+            margin=dict(l=10, r=10, t=30, b=10),
+            legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.05, font=dict(size=10))
+        )
+        
+        return fig
+    
     # Heatmap theo ngành
     @app.callback(
         Output('sector-heatmap', 'figure'),
