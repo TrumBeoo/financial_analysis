@@ -1928,3 +1928,19 @@
 2025-11-10 09:11:10,161 [INFO] src.dashboard.enhanced_callbacks: Final filtered data: 20 records
 2025-11-10 09:11:34,492 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (60, 3)
 2025-11-10 09:11:34,493 [INFO] src.dashboard.enhanced_callbacks: Date range: 2025-10-22 00:00:00 to 2025-11-10 00:00:00
+2025-11-10 09:12:05,050 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (60, 3)
+2025-11-10 09:12:05,050 [INFO] src.dashboard.enhanced_callbacks: Date range: 2025-10-22 00:00:00 to 2025-11-10 00:00:00
+2025-11-10 09:12:35,101 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (60, 3)
+2025-11-10 09:12:35,102 [INFO] src.dashboard.enhanced_callbacks: Date range: 2025-10-22 00:00:00 to 2025-11-10 00:00:00
+2025-11-10 09:13:05,272 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (60, 3)
+2025-11-10 09:13:05,272 [INFO] src.dashboard.enhanced_callbacks: Date range: 2025-10-22 00:00:00 to 2025-11-10 00:00:00
+2025-11-10 09:13:35,270 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (60, 3)
+2025-11-10 09:13:35,271 [INFO] src.dashboard.enhanced_callbacks: Date range: 2025-10-22 00:00:00 to 2025-11-10 00:00:00
+2025-11-10 09:14:06,053 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (60, 3)
+2025-11-10 09:14:06,066 [INFO] src.dashboard.enhanced_callbacks: Date range: 2025-10-22 00:00:00 to 2025-11-10 00:00:00
+2025-11-10 09:14:36,043 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (60, 3)
+2025-11-10 09:14:36,043 [INFO] src.dashboard.enhanced_callbacks: Date range: 2025-10-22 00:00:00 to 2025-11-10 00:00:00
+2025-11-10 09:15:36,077 [INFO] src.dashboard.enhanced_callbacks: Timeline data shape: (60, 3)
+2025-11-10 09:15:36,078 [INFO] src.dashboard.enhanced_callbacks: Date range: 2025-10-22 00:00:00 to 2025-11-10 00:00:00
+2025-11-10 09:15:50,373 [INFO] __main__: Starting Financial News Analysis Application...
+2025-11-10 09:15:50,373 [INFO] src.dashboard.app: Starting dashboard on localhost:8050
