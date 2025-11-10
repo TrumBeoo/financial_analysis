@@ -28,7 +28,7 @@ class SentimentAnalyzer:
     def analyze(self, text):
         """
         Phân tích sentiment
-        Returns: dict với sentiment score
+        Returns: dict với sentiment probability scores (0-1)
         """
         text = text.lower()
         
@@ -38,30 +38,38 @@ class SentimentAnalyzer:
         
         total = positive_count + negative_count + neutral_count
         
+        # Nếu không có từ khóa nào, mặc định là trung tính
         if total == 0:
             return {
-                'positive': 0,
-                'negative': 0,
-                'neutral': 1,
+                'positive': 0.0,
+                'negative': 0.0,
+                'neutral': 1.0,
                 'label': 1  # Trung tính
             }
         
+        # Tính probability scores (normalize về 0-1)
+        positive_score = positive_count / total
+        negative_score = negative_count / total
+        neutral_score = neutral_count / total
+        
         scores = {
-            'positive': positive_count,
-            'negative': negative_count,
-            'neutral': neutral_count
+            'positive': positive_score,
+            'negative': negative_score,
+            'neutral': neutral_score
         }
         
-        # Xác định label
-        max_score = max(scores.items(), key=lambda x: x[1])
-        if max_score[0] == 'positive':
+        # Xác định label dựa trên score cao nhất
+        max_score_key = max(scores, key=scores.get)
+        if max_score_key == 'positive':
             label = 2
-        elif max_score[0] == 'negative':
+        elif max_score_key == 'negative':
             label = 0
         else:
             label = 1
         
         return {
-            **scores,
+            'positive': positive_score,
+            'negative': negative_score,
+            'neutral': neutral_score,
             'label': label
         }

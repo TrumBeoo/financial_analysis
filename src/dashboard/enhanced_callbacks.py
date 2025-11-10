@@ -269,14 +269,32 @@ def register_enhanced_callbacks(app):
         if df.empty or 'crawl_time' not in df.columns:
             return go.Figure()
         
-        # Prepare data
+        # Ensure crawl_time is datetime
+        df['crawl_time'] = pd.to_datetime(df['crawl_time'], errors='coerce')
+        df['date'] = df['crawl_time'].dt.date
+        
+        # Prepare sentiment - CHUẨN HÓA SANG TIẾNG VIỆT
         if 'predicted_sentiment' not in df.columns and 'predicted_label' in df.columns:
             df['predicted_sentiment'] = df['predicted_label'].map({0: 'Tiêu cực', 1: 'Trung tính', 2: 'Tích cực'})
-        
-        df['date'] = pd.to_datetime(df['crawl_time']).dt.date
+        elif 'predicted_sentiment' in df.columns:
+            # Convert to string first
+            df['predicted_sentiment'] = df['predicted_sentiment'].astype(str)
+            sentiment_map = {
+                'Negative': 'Tiêu cực',
+                'Neutral': 'Trung tính', 
+                'Positive': 'Tích cực',
+                'Tiêu cực': 'Tiêu cực',
+                'Trung tính': 'Trung tính',
+                'Tích cực': 'Tích cực'
+            }
+            df['predicted_sentiment'] = df['predicted_sentiment'].map(sentiment_map).fillna('Trung tính')
         
         # Group by date and sentiment
         timeline_data = df.groupby(['date', 'predicted_sentiment']).size().reset_index(name='count')
+        
+        logger.info(f"Timeline data shape: {timeline_data.shape}")
+        logger.info(f"Timeline unique sentiments: {timeline_data['predicted_sentiment'].unique().tolist()}")
+        logger.info(f"Timeline sample:\n{timeline_data.tail(10)}")
         
         fig = go.Figure()
         
@@ -640,7 +658,7 @@ def get_filtered_data(sector='all', days=30, sentiment_type='all', limit=1000):
     # Optimize DataFrame
     df = optimize_dataframe(df)
     
-    # BƯỚC 1: Đảm bảo có cột predicted_sentiment
+    # BƯỚC 1: Đảm bảo có cột predicted_sentiment và chuẩn hóa sang tiếng Việt
     if 'predicted_sentiment' not in df.columns:
         if 'predicted_label' in df.columns:
             df['predicted_sentiment'] = df['predicted_label'].map({
@@ -652,6 +670,19 @@ def get_filtered_data(sector='all', days=30, sentiment_type='all', limit=1000):
         else:
             logger.warning("Neither predicted_sentiment nor predicted_label found in data")
             df['predicted_sentiment'] = 'Trung tính'
+    else:
+        # Convert to string first to avoid Categorical issues
+        df['predicted_sentiment'] = df['predicted_sentiment'].astype(str)
+        sentiment_map = {
+            'Negative': 'Tiêu cực',
+            'Neutral': 'Trung tính', 
+            'Positive': 'Tích cực',
+            'Tiêu cực': 'Tiêu cực',
+            'Trung tính': 'Trung tính',
+            'Tích cực': 'Tích cực'
+        }
+        df['predicted_sentiment'] = df['predicted_sentiment'].map(sentiment_map).fillna('Trung tính')
+        logger.info(f"Normalized predicted_sentiment. Unique values: {df['predicted_sentiment'].unique().tolist()}")
     
     # BƯỚC 2: Xử lý cột sectors
     if 'sectors' not in df.columns:
@@ -722,8 +753,10 @@ def get_filtered_data(sector='all', days=30, sentiment_type='all', limit=1000):
         try:
             cutoff_date = datetime.now() - timedelta(days=days)
             df['crawl_time'] = pd.to_datetime(df['crawl_time'], errors='coerce')
+            # Loại bỏ các giá trị NaT (Not a Time)
+            df = df[df['crawl_time'].notna()]
             df = df[df['crawl_time'] >= cutoff_date]
-            logger.info(f"After time filter: {len(df)} records")
+            logger.info(f"After time filter: {len(df)} records (from {cutoff_date} to now)")
         except Exception as e:
             logger.error(f"Error filtering by time: {e}")
     
@@ -733,11 +766,21 @@ def get_filtered_data(sector='all', days=30, sentiment_type='all', limit=1000):
         df = df[df['sectors'] == sector]
         logger.info(f"Sector filter '{sector}': {before_count} -> {len(df)} records")
     
-    # BƯỚC 5: Filter by sentiment
+    # BƯỚC 5: Filter by sentiment (chuẩn hóa tiếng Việt)
     if sentiment_type != 'all':
         before_count = len(df)
-        df = df[df['predicted_sentiment'] == sentiment_type]
-        logger.info(f"Sentiment filter '{sentiment_type}': {before_count} -> {len(df)} records")
+        # Đảm bảo sentiment_type là tiếng Việt
+        sentiment_map = {
+            'Negative': 'Tiêu cực',
+            'Neutral': 'Trung tính', 
+            'Positive': 'Tích cực',
+            'Tiêu cực': 'Tiêu cực',
+            'Trung tính': 'Trung tính',
+            'Tích cực': 'Tích cực'
+        }
+        normalized_sentiment = sentiment_map.get(sentiment_type, sentiment_type)
+        df = df[df['predicted_sentiment'] == normalized_sentiment]
+        logger.info(f"Sentiment filter '{sentiment_type}' (normalized: '{normalized_sentiment}'): {before_count} -> {len(df)} records")
     
     logger.info(f"Final filtered data: {len(df)} records")
     
