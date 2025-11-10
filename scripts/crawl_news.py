@@ -69,11 +69,12 @@ def main():
             
             logger.info(f"  Sentiment: {sentiment['label']} | Sectors: {processed['sectors']}")
             
+            # OLD CODE (Thiếu predicted_sentiment)
             processed_data.append({
                 'source': row['source'],
                 'title': row['title'],
                 'summary': row.get('summary', ''),
-                'content': row.get('content', ''),  # THÊM: Lưu full content
+                'content': row.get('content', ''),
                 'link': row['link'],
                 'crawl_time': row['crawl_time'],
                 'cleaned_text': processed['cleaned_text'],
@@ -81,7 +82,7 @@ def main():
                 'sentiment_negative': sentiment['negative'],
                 'sentiment_neutral': sentiment['neutral'],
                 'predicted_label': sentiment['label'],
-                'predicted_sentiment': ['Tiêu cực', 'Trung tính', 'Tích cực'][sentiment['label']],
+                'predicted_sentiment': ['Tiêu cực', 'Trung tính', 'Tích cực'][sentiment['label']],  # ← CÓ DÒNG NÀY
                 'sectors': ','.join(processed['sectors']),
                 'processed_at': datetime.now()
             })

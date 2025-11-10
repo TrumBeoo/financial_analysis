@@ -274,20 +274,51 @@ def register_enhanced_callbacks(app):
         df = df[df['crawl_time'].notna()]
         df['date'] = df['crawl_time'].dt.date
         
-        # Prepare sentiment - CHUẨN HÓA SANG TIẾNG VIỆT
-        if 'predicted_sentiment' not in df.columns and 'predicted_label' in df.columns:
-            df['predicted_sentiment'] = df['predicted_label'].map({0: 'Tiêu cực', 1: 'Trung tính', 2: 'Tích cực'})
-        elif 'predicted_sentiment' in df.columns:
-            df['predicted_sentiment'] = df['predicted_sentiment'].astype(str)
-            sentiment_map = {
-                'Negative': 'Tiêu cực',
-                'Neutral': 'Trung tính', 
-                'Positive': 'Tích cực',
-                'Tiêu cực': 'Tiêu cực',
-                'Trung tính': 'Trung tính',
-                'Tích cực': 'Tích cực'
-            }
-            df['predicted_sentiment'] = df['predicted_sentiment'].map(sentiment_map).fillna('Trung tính')
+        # ===== FIX: Xử lý predicted_sentiment NULL =====
+        if 'predicted_sentiment' not in df.columns or df['predicted_sentiment'].isna().all():
+            logger.warning("⚠️ predicted_sentiment column missing or all NULL, creating from predicted_label")
+            
+            if 'predicted_label' in df.columns:
+                df['predicted_sentiment'] = df['predicted_label'].map({
+                    0: 'Tiêu cực',
+                    1: 'Trung tính', 
+                    2: 'Tích cực'
+                })
+                logger.info(f"✅ Created predicted_sentiment for {len(df)} records")
+            else:
+                logger.error("❌ Neither predicted_sentiment nor predicted_label available!")
+                return go.Figure()
+        
+        # ===== FIX: Clean NaN values trong predicted_sentiment =====
+        # Convert NaN to proper sentiment based on predicted_label
+        mask_null = df['predicted_sentiment'].isna()
+        if mask_null.any():
+            logger.warning(f"⚠️ Found {mask_null.sum()} NULL predicted_sentiment, fixing...")
+            
+            if 'predicted_label' in df.columns:
+                df.loc[mask_null, 'predicted_sentiment'] = df.loc[mask_null, 'predicted_label'].map({
+                    0: 'Tiêu cực',
+                    1: 'Trung tính',
+                    2: 'Tích cực'
+                })
+                logger.info(f"✅ Fixed {mask_null.sum()} NULL values")
+        
+        # Chuẩn hóa sentiment (phần code cũ tiếp tục...)
+        df['predicted_sentiment'] = df['predicted_sentiment'].astype(str)
+        sentiment_map = {
+            'Negative': 'Tiêu cực',
+            'Neutral': 'Trung tính', 
+            'Positive': 'Tích cực',
+            'Tiêu cực': 'Tiêu cực',
+            'Trung tính': 'Trung tính',
+            'Tích cực': 'Tích cực',
+            '0': 'Tiêu cực',
+            '1': 'Trung tính',
+            '2': 'Tích cực',
+            'nan': 'Trung tính'  # ← THÊM mapping cho 'nan' string
+        }
+        df['predicted_sentiment'] = df['predicted_sentiment'].map(sentiment_map).fillna('Trung tính')
+        
         
         # BƯỚC 1: Tạo timeline đầy đủ từ ngày đầu đến ngày cuối
         if len(df) > 0:
@@ -601,7 +632,7 @@ def register_enhanced_callbacks(app):
             processed_data = {
                 'source': result['source'],
                 'title': result['title'],
-                'content': result['content'],  # THÊM: Lưu full content
+                'content': result['content'],
                 'summary': result.get('summary', result['content'][:500]),
                 'link': url,
                 'crawl_time': datetime.now(),
@@ -610,7 +641,7 @@ def register_enhanced_callbacks(app):
                 'sentiment_negative': float(sentiment['negative']),
                 'sentiment_neutral': float(sentiment['neutral']),
                 'predicted_label': sentiment['label'],
-                'predicted_sentiment': sentiment_label,
+                'predicted_sentiment': sentiment_label,  # ← ĐÃ CÓ DÒNG NÀY
                 'sectors': ','.join(processed['sectors']) if processed['sectors'] else 'Other',
                 'processed_at': datetime.now()
             }
